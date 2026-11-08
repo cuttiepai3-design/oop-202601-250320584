@@ -1,7 +1,5 @@
 # Catatan Minggu 03: Inheritance
 
-# Catatan Minggu 03: Inheritance
-
 ## 1. Tujuan
 
 - Membuat hierarki class menggunakan inheritance.
