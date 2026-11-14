@@ -28,3 +28,13 @@ Salin setiap pertanyaan ambigu (nomor 1 sampai 7) ke sini dan jawab. Contoh:
 ## Asumsi lain
 
 Tambahkan di sini keputusan lain yang Anda ambil: rumus denda progresif, perubahan skema database, format error API, dan seterusnya.
+
+
+## Rumus denda progresif
+
+- Pertanyaan: Bagaimana menentukan denda yang semakin besar jika keterlambatan bertambah?
+- Keputusan: Menggunakan rumus denda flat ditambah kenaikan sebesar denda flat dikali jumlah hari keterlambatan dibagi 30.
+- Alasan: Agar denda progresif lebih besar daripada denda flat dan meningkat seiring bertambahnya hari keterlambatan.
+- Dampak ke kode: Kelas DendaProgresif, metode hitung().
+- Tes yang membuktikan: Minggu05AbstraksiTest.
+
