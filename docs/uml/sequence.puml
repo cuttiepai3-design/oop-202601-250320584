@@ -1,0 +1,21 @@
+
+@startuml
+title Sequence Diagram - Pengajuan Peminjaman
+
+actor Peminjam
+participant "JadwalPeminjaman" as Jadwal
+
+Peminjam -> Jadwal : ajukan(baru)
+activate Jadwal
+
+Jadwal -> Jadwal : bentrok(baru)
+
+alt TIDAK BENTROK - SUKSES
+    Jadwal -> Jadwal : tambah(baru)
+    Jadwal --> Peminjam : Pengajuan berhasil
+else BENTROK
+    Jadwal --> Peminjam : PeminjamanBentrokException
+end
+
+deactivate Jadwal
+@enduml

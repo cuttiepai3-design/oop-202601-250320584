@@ -1,0 +1,228 @@
+
+@startuml
+title Class Diagram - Sistem Aset Pinjam
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "id.ac.upb.asetpinjam.model" {
+
+    abstract class Aset {
+        - kode: String
+        - nama: String
+        - status: StatusAset
+        - kondisi: Kondisi
+        + Aset(kode: String, nama: String)
+        + getKode(): String
+        + getNama(): String
+        + getStatus(): StatusAset
+        + getKondisi(): Kondisi
+        + setNama(nama: String): void
+        + setStatus(status: StatusAset): void
+        + setKondisi(kondisi: Kondisi): void
+        + bisaDipinjam(): boolean
+        + getJenis(): JenisAset
+        {abstract} + hitungDenda(hariTerlambat: int): long
+    }
+
+    class Laptop {
+        - spesifikasi: String
+        - nomorInventaris: String
+        + Laptop(kode: String, nama: String, spesifikasi: String, nomorInventaris: String)
+        + getSpesifikasi(): String
+        + getNomorInventaris(): String
+        + getJenis(): JenisAset
+        + hitungDenda(hariTerlambat: int): long
+    }
+
+    class AlatLab {
+        - laboratorium: String
+        - tingkatRisiko: TingkatRisiko
+        + AlatLab(kode: String, nama: String, laboratorium: String, tingkatRisiko: TingkatRisiko)
+        + getLaboratorium(): String
+        + getTingkatRisiko(): TingkatRisiko
+        + getJenis(): JenisAset
+        + hitungDenda(hariTerlambat: int): long
+    }
+
+    class Ruang {
+        - kapasitas: int
+        + Ruang(kode: String, nama: String, kapasitas: int)
+        + getKapasitas(): int
+        + getJenis(): JenisAset
+        + hitungDenda(hariTerlambat: int): long
+    }
+
+    class Peminjam <<record>> {
+        - id: String
+        - nama: String
+        + id(): String
+        + nama(): String
+    }
+
+    class Peminjaman {
+        - id: String
+        - peminjam: Peminjam
+        - aset: Aset
+        - mulai: LocalDateTime
+        - selesai: LocalDateTime
+        - status: StatusPeminjaman
+        + Peminjaman(id: String, peminjam: Peminjam, aset: Aset, mulai: LocalDateTime, selesai: LocalDateTime)
+        + getId(): String
+        + getPeminjam(): Peminjam
+        + getAset(): Aset
+        + getMulai(): LocalDateTime
+        + getSelesai(): LocalDateTime
+        + getStatus(): StatusPeminjaman
+        + setStatusDariPenyimpanan(status: StatusPeminjaman): void
+        + ubahStatus(baru: StatusPeminjaman): void
+    }
+
+    enum StatusAset {
+        TERSEDIA
+        DIPINJAM
+        RUSAK
+    }
+
+    enum Kondisi {
+        BAIK
+        RUSAK_RINGAN
+        RUSAK_BERAT
+    }
+
+    enum JenisAset {
+        RUANG
+        LAPTOP
+        ALAT_LAB
+    }
+
+    enum TingkatRisiko {
+        RENDAH
+        SEDANG
+        TINGGI
+    }
+
+    enum StatusPeminjaman {
+        DIAJUKAN
+        DISETUJUI
+        DITOLAK
+        DIBATALKAN
+        DIPINJAM
+        TERLAMBAT
+        DIKEMBALIKAN
+    }
+}
+
+package "id.ac.upb.asetpinjam.kontrak" {
+    interface DapatDipinjam {
+        + bisaDipinjam(): boolean
+    }
+}
+
+package "id.ac.upb.asetpinjam.katalog" {
+    class KatalogAset {
+        - daftar: List<Aset>
+        + tambah(aset: Aset): void
+        + semua(): List<Aset>
+        + cari(kata: String): List<Aset>
+        + cari(kata: String, jenis: JenisAset): List<Aset>
+    }
+}
+
+package "id.ac.upb.asetpinjam.jadwal" {
+    class JadwalPeminjaman {
+        - daftar: List<Peminjaman>
+        - kuotaLaptop: int
+        + JadwalPeminjaman(kuotaLaptop: int)
+        # kuotaLaptop(): int
+        # daftarMutable(): List<Peminjaman>
+        + tambah(p: Peminjaman): void
+        + bentrok(baru: Peminjaman): boolean
+        + semuaUrutMulai(): List<Peminjaman>
+        + perAset(): Map<String, List<Peminjaman>>
+        + hapus(id: String): boolean
+        + ajukan(baru: Peminjaman): void
+    }
+}
+
+package "id.ac.upb.asetpinjam.api.aset" {
+
+    interface AsetRepository {
+        + simpan(aset: Aset): void
+        + cariByKode(kode: String): Optional<Aset>
+        + semua(): List<Aset>
+        + hapus(kode: String): boolean
+    }
+
+    class InMemoryAsetRepository {
+        - data: Map<String, Aset>
+        + simpan(aset: Aset): void
+        + cariByKode(kode: String): Optional<Aset>
+        + semua(): List<Aset>
+        + hapus(kode: String): boolean
+    }
+
+    class AsetService {
+        - repository: AsetRepository
+        + AsetService(repository: AsetRepository)
+        + buat(permintaan: AsetRequest): AsetResponse
+        + cari(kode: String): AsetResponse
+        + semua(): List<AsetResponse>
+        + hapus(kode: String): void
+    }
+
+    class AsetController {
+        - service: AsetService
+        + AsetController(service: AsetService)
+        + buat(permintaan: AsetRequest): ResponseEntity<AsetResponse>
+        + semua(): List<AsetResponse>
+        + cari(kode: String): AsetResponse
+        + hapus(kode: String): ResponseEntity<Void>
+    }
+
+    class AsetRequest <<record>> {
+        - jenis: JenisAset
+        - kode: String
+        - nama: String
+        - kapasitas: Integer
+        - spesifikasi: String
+        - nomorInventaris: String
+        - laboratorium: String
+        - tingkatRisiko: String
+    }
+
+    class AsetResponse <<record>> {
+        - kode: String
+        - nama: String
+        - jenis: JenisAset
+        - status: StatusAset
+        - kondisi: Kondisi
+        + dari(aset: Aset): AsetResponse
+    }
+}
+
+' Pewarisan dan implementasi
+Aset <|-- Laptop
+Aset <|-- AlatLab
+Aset <|-- Ruang
+DapatDipinjam <|.. Aset
+
+' Relasi asosiasi
+KatalogAset "1" --> "0..*" Aset : daftar
+JadwalPeminjaman "1" --> "0..*" Peminjaman : daftar
+Peminjam "1" <-- "0..*" Peminjaman : peminjam
+Aset "1" <-- "0..*" Peminjaman : aset
+
+' Relasi repository dan service
+AsetRepository <|.. InMemoryAsetRepository
+AsetService --> AsetRepository : repository
+AsetController --> AsetService : service
+
+' Ketergantungan DTO
+AsetService ..> AsetRequest
+AsetService ..> AsetResponse
+AsetController ..> AsetRequest
+AsetController ..> AsetResponse
+
+@enduml
